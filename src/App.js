@@ -15,8 +15,7 @@ import {
   TextInput,
   Button,
   KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator
+  Platform
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import {
@@ -28,7 +27,8 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 
 const App: () => React$Node = () => {
-  const [confirm, setConfirm] = useState(null);
+  const [otp,setOtp]=useState('')
+  const [confirm, setConfirm] = useState(false);
   const [userNum,setUserNum] = useState('')
   const [code, setCode] = useState('');
   const [initializing, setInitializing] = useState(true);
@@ -38,7 +38,7 @@ const App: () => React$Node = () => {
     auth()
     .signOut()
     setUser(null)
-    setConfirm(null)
+    setConfirm(false)
     setUserNum('')
     setWarning('')
     setCode('')
@@ -46,25 +46,90 @@ const App: () => React$Node = () => {
   }
 
   async function signInWithPhoneNumber() {
-    const confirmation = await auth().signInWithPhoneNumber(userNum,true);
-    setConfirm(confirmation);
+  setWarning('')
+
+  auth()
+  .verifyPhoneNumber(userNum)
+  .on(
+    'state_changed',
+    phoneAuthSnapshot => {
+      switch (phoneAuthSnapshot.state) {
+        case auth.PhoneAuthState.CODE_SENT:
+          console.log('code sent',phoneAuthSnapshot);
+          confirmResult =>
+            console.log(confirmResult)
+            // this.props.navigation.navigate('SignUpOtp', {
+            //   handleAddVal: this.props.navigation.state.params.handleAddVal,
+            //   handleSubmit: this.props.navigation.state.params.handleSubmit,
+            // });
+          // this.props.navigation.navigate('SignUpPassword', {
+          //   handleAddVal: this.props.navigation.state.params.handleAddVal,
+          //   handleSubmit: this.props.navigation.state.params.handleSubmit,
+          // });
+
+          // on ios this is the final phone auth state event you'd receive
+          // so you'd then ask for user input of the code and build a credential from it
+          // as demonstrated in the `signInWithPhoneNumber` example above
+          break;
+        case auth.PhoneAuthState.ERROR: // or 'error'
+          console.log('verification error', phoneAuthSnapshot);
+          // console.log(phoneAuthSnapshot.ERROR);
+          setWarning(phoneAuthSnapshot.error.toString())
+          break;
+      }
+    },
+    error => {
+      // optionalErrorCb would be same logic as the ERROR case above,  if you've already handed
+      // the ERROR case in the above observer then there's no need to handle it here
+      console.log(error,"-0--",error.verificationId);
+
+      setWarning(error.toString()+" id: "+error.verificationId)
+
+      // verificationId is attached to error if required
+    },
+    phoneAuthSnapshot => {
+      phoneAuthSnapshot.state=="timeout"?
+      setWarning("Request timed out: Can't use OTP from someone elses phone !"):
+      setConfirm(true)
+      setOtp(phoneAuthSnapshot.code)
+      // optionalCompleteCb would be same logic as the AUTO_VERIFIED/CODE_SENT switch cases above
+      // depending on the platform. If you've already handled those cases in the observer then
+      // there's absolutely no need to handle it here.
+
+      // Platform specific logic:
+      // - if this is on IOS then phoneAuthSnapshot.code will always be null
+      // - if ANDROID auto verified the sms code then phoneAuthSnapshot.code will contain the verified sms code
+      //   and there'd be no need to ask for user input of the code - proceed to credential creating logic
+      // - if ANDROID auto verify timed out then phoneAuthSnapshot.code would be null, just like ios, you'd
+      //   continue with user input logic.
+      console.log('phoneAuthSnapshot', phoneAuthSnapshot);
+    },
+  );
+    // const confirmation = await auth().signInWithPhoneNumber(userNum,true);
+    // setConfirm(confirmation);
   }
 
   async function confirmCode() {
-    try {
-      await confirm.confirm(code)
+
+    if(code === otp){
       setWarning("Success!!")
-      // setUser({phoneNumber:userNum})
-      setUserNum('')
-    } catch (error) {
-      setWarning(error.toString())
-      setCode('')
-      console.log('Invalid code.');
+      setUser({phoneNumber:userNum})
     }
+    // try {
+    //   await confirm.confirm(code)
+    //   setWarning("Success!!")
+    //   // setUser({phoneNumber:userNum})
+    //   setUserNum('')
+    // } catch (error) {
+    //   setWarning(error.toString())
+    //   setCode('')
+    //   console.log('Invalid code.');
+    // }
   }
 
   // Handle user state changes
   function onAuthStateChanged(user) {
+    console.log("setting user", user)
     setUser(user);
     if (initializing) setInitializing(false);
   }
@@ -85,11 +150,11 @@ const App: () => React$Node = () => {
         <Text
         style={[styles.sectionTitle,styles.sectionContainer]}
         >Welcome {user.phoneNumber}</Text>
-        <Text
+        {/* <Text
         style={[styles.sectionDescription,styles.sectionContainer]}
         >
           Your UID is: {user.uid}
-        </Text>
+        </Text> */}
         <Button
         title="Log out"
         onPress={logOut}
@@ -116,6 +181,11 @@ const App: () => React$Node = () => {
             keyboardType="phone-pad"
             />
           </View>
+              <Text
+              style={styles.sectionDescription}
+              >
+                {warning}
+              </Text>
           <View style={styles.sectionContainer}>
             <Button
             onPress={signInWithPhoneNumber}
