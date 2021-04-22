@@ -34,7 +34,7 @@ const App: () => React$Node = () => {
     auth().signOut();
     setUser(null);
     setConfirm(false);
-    setUserNum('');
+    setUserNum('+91'); // india
     setWarning('');
     setCode('');
   }
