@@ -38,8 +38,62 @@ const App: () => React$Node = () => {
     setWarning('');
     setCode('');
   }
+  const [ verificationId, setVerificationId] = useState('')
+  function codeInputSubmitted() {
+  
+    const credential = auth.PhoneAuthProvider.credential(
+      verificationId,
+      code
+    );
+  
+    // To verify phone number without interfering with the existing user
+    // who is signed in, we offload the verification to a worker app.
+    // let fbWorkerApp = firebase.apps.find(app => app.name === 'auth-worker')
+    //                || firebase.initializeApp(firebase.app().options, 'auth-worker');
+    // let fbWorkerAuth = fbWorkerApp.auth();  
+    // fbWorkerAuth.setPersistence(auth.Auth.Persistence.NONE); // disables caching of account credentials
+  
+    auth().signInWithCredential(credential)
+      .then((userCredential) => {
+        // userCredential.additionalUserInfo.isNewUser may be present
+        // userCredential.credential can be used to link to an existing user account
+        setWarning('Success!!');
+        setUser(userCredential.user)
 
-  async function signInWithPhoneNumber() {
+  
+        // return fbWorkerAuth.signOut().catch(err => console.error('Ignored sign out error: ', err);
+      })
+      .catch((err) => {
+        // failed
+        let userErrorMessage;
+        if (error.code === 'auth/invalid-verification-code') {
+          userErrorMessage = 'Sorry, that code was incorrect.'
+        } else if (error.code === 'auth/user-disabled') {
+          userErrorMessage = 'Sorry, this phone number has been blocked.';
+        } else {
+          // other internal error
+          // see https://firebase.google.com/docs/reference/js/auth.Auth.html#sign-inwith-credential
+          userErrorMessage = 'Sorry, we couldn\'t verify that phone number at the moment. '
+            + 'Please try again later. '
+            + '\n\nIf the issue persists, please contact support.'
+        }
+        setWarning(userErrorMessage)
+      })
+  }
+  
+  function signInWithPhoneNumber() {
+    auth()
+    .verifyPhoneNumber(userNum)
+    .then(phoneAuthSnapshot=>{
+      setVerificationId(phoneAuthSnapshot.verificationId)
+      if (phoneAuthSnapshot.code){
+        setCode(phoneAuthSnapshot.code)
+      }
+      setConfirm(true)
+    })
+  }
+
+  async function signInWithPhoneNumberOld() { //deprecated
     setWarning('');
 
     auth()
@@ -51,14 +105,6 @@ const App: () => React$Node = () => {
             case auth.PhoneAuthState.CODE_SENT:
               console.log('code sent', phoneAuthSnapshot);
               confirmResult => console.log(confirmResult);
-              // this.props.navigation.navigate('SignUpOtp', {
-              //   handleAddVal: this.props.navigation.state.params.handleAddVal,
-              //   handleSubmit: this.props.navigation.state.params.handleSubmit,
-              // });
-              // this.props.navigation.navigate('SignUpPassword', {
-              //   handleAddVal: this.props.navigation.state.params.handleAddVal,
-              //   handleSubmit: this.props.navigation.state.params.handleSubmit,
-              // });
 
               // on ios this is the final phone auth state event you'd receive
               // so you'd then ask for user input of the code and build a credential from it
@@ -104,7 +150,7 @@ const App: () => React$Node = () => {
     // setConfirm(confirmation);
   }
 
-  async function confirmCode() {
+  async function confirmCode() { //deprecated
     if (code === otp) {
       setWarning('Success!!');
       setUser({phoneNumber: userNum});
@@ -202,7 +248,7 @@ const App: () => React$Node = () => {
             Thank you
           </Text>
           <View style={styles.sectionContainer}>
-            <Button onPress={confirmCode} title="Confirm Code" />
+            <Button onPress={codeInputSubmitted} title="Confirm Code" />
             <Text style={styles.sectionDescription}>{warning}</Text>
             <Button title="Go back" color="red" onPress={logOut} />
           </View>
