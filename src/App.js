@@ -6,7 +6,7 @@
  * @flow strict-local
  */
 
-import React, { useState,useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   StyleSheet,
   View,
@@ -15,105 +15,99 @@ import {
   TextInput,
   Button,
   KeyboardAvoidingView,
-  Platform
+  Platform,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import {
-  Header,
-  LearnMoreLinks,
   Colors,
-  DebugInstructions,
-  ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
 const App: () => React$Node = () => {
-  const [otp,setOtp]=useState('')
+  const [otp, setOtp] = useState('');
   const [confirm, setConfirm] = useState(false);
-  const [userNum,setUserNum] = useState('')
+  const [userNum, setUserNum] = useState('+91');
   const [code, setCode] = useState('');
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState();
-  const [warning,setWarning] = useState('');
-  function logOut (){
-    auth()
-    .signOut()
-    setUser(null)
-    setConfirm(false)
-    setUserNum('')
-    setWarning('')
-    setCode('')
-
+  const [warning, setWarning] = useState('');
+  function logOut() {
+    auth().signOut();
+    setUser(null);
+    setConfirm(false);
+    setUserNum('');
+    setWarning('');
+    setCode('');
   }
 
   async function signInWithPhoneNumber() {
-  setWarning('')
+    setWarning('');
 
-  auth()
-  .verifyPhoneNumber(userNum)
-  .on(
-    'state_changed',
-    phoneAuthSnapshot => {
-      switch (phoneAuthSnapshot.state) {
-        case auth.PhoneAuthState.CODE_SENT:
-          console.log('code sent',phoneAuthSnapshot);
-          confirmResult =>
-            console.log(confirmResult)
-            // this.props.navigation.navigate('SignUpOtp', {
-            //   handleAddVal: this.props.navigation.state.params.handleAddVal,
-            //   handleSubmit: this.props.navigation.state.params.handleSubmit,
-            // });
-          // this.props.navigation.navigate('SignUpPassword', {
-          //   handleAddVal: this.props.navigation.state.params.handleAddVal,
-          //   handleSubmit: this.props.navigation.state.params.handleSubmit,
-          // });
+    auth()
+      .verifyPhoneNumber(userNum)
+      .on(
+        'state_changed',
+        phoneAuthSnapshot => {
+          switch (phoneAuthSnapshot.state) {
+            case auth.PhoneAuthState.CODE_SENT:
+              console.log('code sent', phoneAuthSnapshot);
+              confirmResult => console.log(confirmResult);
+              // this.props.navigation.navigate('SignUpOtp', {
+              //   handleAddVal: this.props.navigation.state.params.handleAddVal,
+              //   handleSubmit: this.props.navigation.state.params.handleSubmit,
+              // });
+              // this.props.navigation.navigate('SignUpPassword', {
+              //   handleAddVal: this.props.navigation.state.params.handleAddVal,
+              //   handleSubmit: this.props.navigation.state.params.handleSubmit,
+              // });
 
-          // on ios this is the final phone auth state event you'd receive
-          // so you'd then ask for user input of the code and build a credential from it
-          // as demonstrated in the `signInWithPhoneNumber` example above
-          break;
-        case auth.PhoneAuthState.ERROR: // or 'error'
-          console.log('verification error', phoneAuthSnapshot);
-          // console.log(phoneAuthSnapshot.ERROR);
-          setWarning(phoneAuthSnapshot.error.toString())
-          break;
-      }
-    },
-    error => {
-      // optionalErrorCb would be same logic as the ERROR case above,  if you've already handed
-      // the ERROR case in the above observer then there's no need to handle it here
-      console.log(error,"-0--",error.verificationId);
+              // on ios this is the final phone auth state event you'd receive
+              // so you'd then ask for user input of the code and build a credential from it
+              // as demonstrated in the `signInWithPhoneNumber` example above
+              break;
+            case auth.PhoneAuthState.ERROR: // or 'error'
+              console.log('verification error', phoneAuthSnapshot);
+              // console.log(phoneAuthSnapshot.ERROR);
+              setWarning(phoneAuthSnapshot.error.toString());
+              break;
+          }
+        },
+        error => {
+          // optionalErrorCb would be same logic as the ERROR case above,  if you've already handed
+          // the ERROR case in the above observer then there's no need to handle it here
+          console.log(error, '-0--', error.verificationId);
 
-      setWarning(error.toString()+" id: "+error.verificationId)
+          setWarning(error.toString() + ' id: ' + error.verificationId);
 
-      // verificationId is attached to error if required
-    },
-    phoneAuthSnapshot => {
-      phoneAuthSnapshot.state=="timeout"?
-      setWarning("Request timed out: Can't use OTP from someone elses phone !"):
-      setConfirm(true)
-      setOtp(phoneAuthSnapshot.code)
-      // optionalCompleteCb would be same logic as the AUTO_VERIFIED/CODE_SENT switch cases above
-      // depending on the platform. If you've already handled those cases in the observer then
-      // there's absolutely no need to handle it here.
+          // verificationId is attached to error if required
+        },
+        phoneAuthSnapshot => {
+          phoneAuthSnapshot.state == 'timeout'
+            ? setWarning(
+                "Request timed out: Can't use OTP from someone elses phone !",
+              )
+            : setConfirm(true);
+          setOtp(phoneAuthSnapshot.code);
+          // optionalCompleteCb would be same logic as the AUTO_VERIFIED/CODE_SENT switch cases above
+          // depending on the platform. If you've already handled those cases in the observer then
+          // there's absolutely no need to handle it here.
 
-      // Platform specific logic:
-      // - if this is on IOS then phoneAuthSnapshot.code will always be null
-      // - if ANDROID auto verified the sms code then phoneAuthSnapshot.code will contain the verified sms code
-      //   and there'd be no need to ask for user input of the code - proceed to credential creating logic
-      // - if ANDROID auto verify timed out then phoneAuthSnapshot.code would be null, just like ios, you'd
-      //   continue with user input logic.
-      console.log('phoneAuthSnapshot', phoneAuthSnapshot);
-    },
-  );
+          // Platform specific logic:
+          // - if this is on IOS then phoneAuthSnapshot.code will always be null
+          // - if ANDROID auto verified the sms code then phoneAuthSnapshot.code will contain the verified sms code
+          //   and there'd be no need to ask for user input of the code - proceed to credential creating logic
+          // - if ANDROID auto verify timed out then phoneAuthSnapshot.code would be null, just like ios, you'd
+          //   continue with user input logic.
+          console.log('phoneAuthSnapshot', phoneAuthSnapshot);
+        },
+      );
     // const confirmation = await auth().signInWithPhoneNumber(userNum,true);
     // setConfirm(confirmation);
   }
 
   async function confirmCode() {
-
-    if(code === otp){
-      setWarning("Success!!")
-      setUser({phoneNumber:userNum})
+    if (code === otp) {
+      setWarning('Success!!');
+      setUser({phoneNumber: userNum});
     }
     // try {
     //   await confirm.confirm(code)
@@ -129,7 +123,7 @@ const App: () => React$Node = () => {
 
   // Handle user state changes
   function onAuthStateChanged(user) {
-    console.log("setting user", user)
+    console.log('setting user', user);
     setUser(user);
     if (initializing) setInitializing(false);
   }
@@ -147,102 +141,75 @@ const App: () => React$Node = () => {
   if (user) {
     return (
       <View>
-        <Text
-        style={[styles.sectionTitle,styles.sectionContainer]}
-        >Welcome {user.phoneNumber}</Text>
+        <Text style={[styles.sectionTitle, styles.sectionContainer]}>
+          Welcome {user.phoneNumber}
+        </Text>
         {/* <Text
         style={[styles.sectionDescription,styles.sectionContainer]}
         >
           Your UID is: {user.uid}
         </Text> */}
-        <Button
-        title="Log out"
-        onPress={logOut}
-        />
+        <Button title="Log out" onPress={logOut} />
       </View>
     );
   }
 
-  if(!confirm){
+  if (!confirm) {
+    return (
+      <>
+        <StatusBar barStyle="dark-content" />
+        <KeyboardAvoidingView
+          behavior={Platform.OS == 'ios' ? 'padding' : 'height'}
+          style={styles.scrollView}>
+          <View style={styles.body}>
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>Please Enter phone number</Text>
+              <TextInput
+                value={userNum}
+                onChangeText={setUserNum}
+                style={styles.addBorder}
+                keyboardType="phone-pad"
+              />
+            </View>
+            <Text style={styles.sectionDescription}>{warning}</Text>
+            <View style={styles.sectionContainer}>
+              <Button onPress={signInWithPhoneNumber} title="Send text" />
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </>
+    );
+  }
+
   return (
     <>
       <StatusBar barStyle="dark-content" />
       <KeyboardAvoidingView
-        behavior={Platform.OS == "ios" ? "padding" : "height"}
-        style={styles.scrollView}
-      >
+        behavior={Platform.OS == 'ios' ? 'padding' : 'height'}
+        style={styles.scrollView}>
         <View style={styles.body}>
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Please Enter phone number</Text>
+            <Text style={styles.sectionTitle}>Please Enter code</Text>
             <TextInput
-            value={userNum}
-            onChangeText={setUserNum}
-            style={styles.addBorder}
-            keyboardType="phone-pad"
+              value={code}
+              onChangeText={setCode}
+              style={styles.addBorder}
+              textContentType="oneTimeCode"
             />
           </View>
-              <Text
-              style={styles.sectionDescription}
-              >
-                {warning}
-              </Text>
+          <Text style={[styles.sectionDescription, styles.sectionContainer]}>
+            If your number is used with this phone, we will auto detect code.
+            Thank you
+          </Text>
           <View style={styles.sectionContainer}>
-            <Button
-            onPress={signInWithPhoneNumber}
-            title="Send text"
-            />
+            <Button onPress={confirmCode} title="Confirm Code" />
+            <Text style={styles.sectionDescription}>{warning}</Text>
+            <Button title="Go back" color="red" onPress={logOut} />
           </View>
         </View>
       </KeyboardAvoidingView>
     </>
-  );}
-
-  return (
-    <>
-      <StatusBar barStyle="dark-content" />
-      <KeyboardAvoidingView
-        behavior={Platform.OS == "ios" ? "padding" : "height"}
-        style={styles.scrollView}
-      >
-          <View style={styles.body}>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Please Enter code</Text>
-              <TextInput
-              value={code}
-              onChangeText={setCode}
-              style={styles.addBorder}
-              textContentType='oneTimeCode'
-              />
-            </View>
-            <Text
-            style={[styles.sectionDescription,styles.sectionContainer]}
-            >
-              If your number is used with this phone, we will auto detect code. Thank you
-            </Text>
-            <View style={styles.sectionContainer}>
-              <Button
-              onPress={confirmCode}
-              title="Confirm Code"
-              />
-              <Text
-              style={styles.sectionDescription}
-              >
-                {warning}
-              </Text>
-              <Button
-              title="Go back"
-              color='red'
-              onPress={logOut}
-              />
-            </View>
-          </View>
-      </KeyboardAvoidingView>
-    </>
   );
-
-  
-
-  
 };
 
 const styles = StyleSheet.create({
@@ -278,8 +245,8 @@ const styles = StyleSheet.create({
     borderColor: 'black',
     borderWidth: 2,
     borderRadius: 10,
-    margin:15,
-    padding:10
+    margin: 15,
+    padding: 10,
   },
   footer: {
     color: Colors.dark,
