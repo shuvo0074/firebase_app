@@ -17,7 +17,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
-  TouchableOpacity
+  TouchableOpacity,
+  Modal,
+  Image
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import {
@@ -36,6 +38,7 @@ const App: () => React$Node = () => {
   const [warning, setWarning] = useState('');
   const [ImageSource, setImageSource] = useState(null);
   const [torchOn, setTorchOn] = useState(RNCamera.Constants.FlashMode.off);
+  const [ visible, setVisible] = useState(false)
 
   function toggleTorch() {
     let tState = torchOn;
@@ -54,6 +57,7 @@ const App: () => React$Node = () => {
       const data = await camera.takePictureAsync(options);
       //  eslint-disable-next-line
       setImageSource(data.uri);
+      setVisible(true)
     }
   }
   const PendingView = () => (
@@ -318,6 +322,78 @@ const App: () => React$Node = () => {
   if (user) {
     return (
       <View>
+        <Modal
+          visible={visible}
+        >
+          <View
+            style={{
+              height,
+              width,
+            }}
+          >
+            <Image
+              source={{uri:ImageSource}}
+              style={{
+                flex:1
+              }}
+            />
+            {/* button list */}
+            <View
+            style={{
+              height:height/5,
+              justifyContent:'space-evenly',
+              width,
+              flexDirection:'row',
+              position:'absolute',
+              bottom:0
+            }}
+            >
+            <TouchableOpacity
+              style={{
+                backgroundColor:'grey',
+                height:height/15,
+                width:width/3,
+                alignSelf:'center',
+                alignItems:'center',
+                justifyContent:'center',
+                borderRadius:5
+              }}
+              onPress={()=>setVisible(false)}
+            >
+              <Text
+                style={{
+                  fontWeight:'bold',
+                  color:'#FFF'
+                }}
+              >
+                Cancel
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                backgroundColor:'orange',
+                height:height/15,
+                width:width/3,
+                alignSelf:'center',
+                alignItems:'center',
+                justifyContent:'center',
+                borderRadius:5
+              }}
+              onPress={()=>setVisible(false)}
+            >
+              <Text
+                style={{
+                  fontWeight:'bold',
+                  color:'#FFF'
+                }}
+              >
+                Submit
+              </Text>
+            </TouchableOpacity>
+
+          </View>
+          </View>
+        </Modal>
         {renderCapturePhoto()}
         <Text style={[styles.sectionTitle, styles.sectionContainer]}>
           Welcome {user.phoneNumber}
