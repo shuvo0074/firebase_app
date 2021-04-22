@@ -16,11 +16,15 @@ import {
   Button,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
+  TouchableOpacity
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import {
   Colors,
 } from 'react-native/Libraries/NewAppScreen';
+import { RNCamera } from 'react-native-camera';
+const { height,width } = Dimensions.get('window');
 
 const App: () => React$Node = () => {
   const [otp, setOtp] = useState('');
@@ -30,6 +34,133 @@ const App: () => React$Node = () => {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState();
   const [warning, setWarning] = useState('');
+  const [ImageSource, setImageSource] = useState(null);
+  const [torchOn, setTorchOn] = useState(RNCamera.Constants.FlashMode.off);
+
+  function toggleTorch() {
+    let tState = torchOn;
+    if (tState == RNCamera.Constants.FlashMode.off) {
+      tState = RNCamera.Constants.FlashMode.torch;
+    } else {
+      tState = RNCamera.Constants.FlashMode.off;
+    }
+    setTorchOn(tState);
+  }
+
+  async function takePicture(camera) {
+    if (camera) {
+      // todo: set quality: 0.5 to compress; and widthX height tor reduce size
+      const options = { width: 640, height: 960, quality: 1, base64: true };
+      const data = await camera.takePictureAsync(options);
+      //  eslint-disable-next-line
+      setImageSource(data.uri);
+    }
+  }
+  const PendingView = () => (
+    <View style={styles.pendingViewWrapper}>
+      <Text>Waiting</Text>
+    </View>
+  );
+  const renderCapturePhoto = () => (
+    <RNCamera
+      style={styles.preview}
+      type={RNCamera.Constants.Type.back}
+      flashMode={torchOn}
+      androidCameraPermissionOptions={{
+        title: 'Permission to use camera',
+        message: 'We need your permission to use your camera',
+        buttonPositive: 'Ok',
+        buttonNegative: 'Cancel',
+      }}
+    >
+      {({ camera, status }) => {
+        if (status !== 'READY') return <PendingView />;
+        return (
+          <View
+            style={{
+              flex:1,
+              justifyContent:'space-evenly',
+            }}
+            >
+            <View
+              style={{
+                flex:1,
+                justifyContent:'center',
+                alignItems:'center'
+              }}
+            >
+              <View
+                style={{
+                  width:width-10,
+                  height:height/3,
+                  borderWidth:2,
+                  borderColor:'red'
+                }}
+              >
+
+              </View>
+
+            </View>
+
+          <View
+            style={{
+              height:height/5,
+              justifyContent:'space-evenly',
+              width,
+              flexDirection:'row'
+            }}
+            >
+
+            <TouchableOpacity
+              style={{
+                backgroundColor:'grey',
+                height:height/15,
+                width:width/3,
+                alignSelf:'center',
+                alignItems:'center',
+                justifyContent:'center',
+                borderRadius:5
+              }}
+              onPress={()=>toggleTorch()}
+            >
+              <Text
+                style={{
+                  fontWeight:'bold',
+                  color:'#FFF'
+                }}
+              >
+                Flash
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                backgroundColor:'blue',
+                height:height/15,
+                width:width/3,
+                alignSelf:'center',
+                alignItems:'center',
+                justifyContent:'center',
+                borderRadius:5
+              }}
+              onPress={()=>takePicture(camera)}
+            >
+              <Text
+                style={{
+                  fontWeight:'bold',
+                  color:'#FFF'
+                }}
+              >
+                Capture
+              </Text>
+            </TouchableOpacity>
+
+          </View>
+          </View>
+
+        );
+      }}
+    </RNCamera>
+  );
   function logOut() {
     auth().signOut();
     setUser(null);
@@ -187,6 +318,7 @@ const App: () => React$Node = () => {
   if (user) {
     return (
       <View>
+        {renderCapturePhoto()}
         <Text style={[styles.sectionTitle, styles.sectionContainer]}>
           Welcome {user.phoneNumber}
         </Text>
@@ -195,7 +327,15 @@ const App: () => React$Node = () => {
         >
           Your UID is: {user.uid}
         </Text> */}
+        <View
+          style={{
+            width:width/2,
+            alignSelf:'center'
+          }}
+        >
         <Button title="Log out" onPress={logOut} />
+
+        </View>
       </View>
     );
   }
@@ -270,13 +410,14 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   sectionContainer: {
-    marginTop: 32,
+    marginTop: 12,
     paddingHorizontal: 24,
   },
   sectionTitle: {
-    fontSize: 24,
+    fontSize: 14,
     fontWeight: '600',
     color: Colors.black,
+    alignSelf:'center'
   },
   sectionDescription: {
     marginTop: 8,
@@ -301,6 +442,19 @@ const styles = StyleSheet.create({
     padding: 4,
     paddingRight: 12,
     textAlign: 'right',
+  },
+  preview: {
+    height:height-100,
+    width,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  pendingViewWrapper: {
+    flex: 1,
+    width: width,
+    backgroundColor: 'lightgreen',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
