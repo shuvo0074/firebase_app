@@ -20,6 +20,7 @@ import {
   TouchableOpacity,
   Modal,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
@@ -37,6 +38,7 @@ const App: () => React$Node = () => {
   const [ImageSource, setImageSource] = useState(null);
   const [torchOn, setTorchOn] = useState(RNCamera.Constants.FlashMode.off);
   const [visible, setVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   function toggleTorch() {
     let tState = torchOn;
@@ -198,6 +200,7 @@ const App: () => React$Node = () => {
   }
 
   function signInWithPhoneNumber() {
+    setIsLoading(true)
     auth()
       .verifyPhoneNumber(userNum)
       .then(phoneAuthSnapshot => {
@@ -205,6 +208,7 @@ const App: () => React$Node = () => {
         if (phoneAuthSnapshot.code) {
           setCode(phoneAuthSnapshot.code);
         }
+        setIsLoading(false)
         setConfirm(true);
       });
   }
@@ -418,13 +422,17 @@ const App: () => React$Node = () => {
                   borderRadius: 5,
                 }}
                 onPress={signInWithPhoneNumber}>
-                <Text
-                  style={{
-                    fontWeight: 'bold',
-                    color: '#FFF',
-                  }}>
-                  Send text
-                </Text>
+                {isLoading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text
+                    style={{
+                      fontWeight: 'bold',
+                      color: '#FFF',
+                    }}>
+                    Send text
+                  </Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
