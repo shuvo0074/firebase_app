@@ -98,7 +98,7 @@ const App: () => React$Node = () => {
                   width:width-10,
                   height:height/3,
                   borderWidth:2,
-                  borderColor:'red'
+                  borderColor:'white'
                 }}
               >
 
