@@ -407,7 +407,25 @@ const App: () => React$Node = () => {
             </View>
             <Text style={styles.sectionDescription}>{warning}</Text>
             <View style={styles.sectionContainer}>
-              <Button onPress={signInWithPhoneNumber} title="Send text" />
+              <TouchableOpacity
+                style={{
+                  backgroundColor: 'blue',
+                  height: height / 15,
+                  width: width / 2,
+                  alignSelf: 'center',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 5,
+                }}
+                onPress={signInWithPhoneNumber}>
+                <Text
+                  style={{
+                    fontWeight: 'bold',
+                    color: '#FFF',
+                  }}>
+                  Send text
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
         </KeyboardAvoidingView>
