@@ -53,7 +53,7 @@ const App: () => React$Node = () => {
   async function takePicture(camera) {
     if (camera) {
       // todo: set quality: 0.5 to compress; and widthX height tor reduce size
-      const options = { width: 640, height: 960, quality: 1, base64: true };
+      const options = { width: 640, height: 960, quality: 0.7, base64: true };
       const data = await camera.takePictureAsync(options);
       //  eslint-disable-next-line
       setImageSource(data.uri);
